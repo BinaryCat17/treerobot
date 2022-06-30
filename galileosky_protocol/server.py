@@ -9,8 +9,6 @@ import pickle
 
 class GalileoHandler(TCPRequestHandler):
     def process_first_packet(self, packet):
-        time = packet['time']
-        packet.pop('time') 
         self.server.packet_handler.first(packet)
 
     def process_main_packet(self, packet):
