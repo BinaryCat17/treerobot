@@ -89,7 +89,6 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             body = data[:-next_pack_size]
 
         sended_crc16, real_crc16 = crc16(body)
-        print(data, sended_crc16, real_crc16)
         self.request.send(confirm(real_crc16))
 
         # если получено больше данных, чем указано в пакете, то это часть следующего пакета

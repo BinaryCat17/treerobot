@@ -38,6 +38,7 @@ def crc16(data):
 
 # составление пакета, отправляемого обратно для подтверждения
 def confirm(data_crc16):
+    print("ПЕРЕДАННО БАЙТ:",  len(struct.pack('<B', 2) + struct.pack('<H', data_crc16)))
     return struct.pack('<B', 2) + struct.pack('<H', data_crc16)
 
 # функция возвращает массив показаний
