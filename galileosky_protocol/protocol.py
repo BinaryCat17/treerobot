@@ -21,6 +21,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
         return parse(packet_data), next_packed_data
 
     def handle(self):
+        print("CONNECTED")
         try:
             # Получаем первый пакет после открытия соедниения
             # next_data для первого пакета всегда пустая
