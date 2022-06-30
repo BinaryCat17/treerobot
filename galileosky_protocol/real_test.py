@@ -1,7 +1,7 @@
 from .server import GalileoServer
 
 def run():
-    HOST = 'localhost'
+    HOST = '0.0.0.0'
     PORT = 8080
     s = GalileoServer((HOST, PORT))
     while 1:
