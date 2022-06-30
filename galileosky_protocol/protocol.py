@@ -88,6 +88,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             # тело текущего пакета, без учета следующего
             body = data[:-next_pack_size]
 
+        print(body)
         sended_crc16, real_crc16 = crc16(body)
         self.request.send(confirm(real_crc16))
 

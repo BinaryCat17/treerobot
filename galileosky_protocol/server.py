@@ -12,7 +12,6 @@ class GalileoHandler(TCPRequestHandler):
         self.server.packet_handler.first(packet)
 
     def process_main_packet(self, packet):
-        print(packet)
         time = packet['time']
         packet.pop('time')
 
