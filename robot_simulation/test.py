@@ -9,7 +9,7 @@ ANIMATION_INTERVAL = 50
 
 
 def run():
-    data = Storage.parsewln("BEDNAR Swifter SE 12000.wln")
+    data = Storage.parsewln("data/BEDNAR Swifter SE 12000.wln")
     print("Стандартные отклонения датасета:")
     print("Позиция x -",
           "{0:0.2f}м".format(Storage.stdDevDif(data, Storage.x)))
