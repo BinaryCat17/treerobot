@@ -11,7 +11,7 @@ class GalileoHandler(TCPRequestHandler):
     def process_first_packet(self, packet):
         time = packet['time']
         packet.pop('time') 
-        self.server.packet_handler.first(datetime.fromtimestamp(int(time)), packet)
+        self.server.packet_handler.first(packet)
 
     def process_main_packet(self, packet):
         time = packet['time']
@@ -32,8 +32,8 @@ class GalileoHandler(TCPRequestHandler):
 
 # можно определить свой класс, подобно этому для обработки пакетов
 class DefaultPacketHandler:
-    def first(self, time, packet):
-        print(time.time(), "- принят первый пакет:", packet)
+    def first(self, packet):
+        print(datetime.now().time(), "- принят первый пакет:", packet)
 
     def delayed(self, time, packet):
         print(time.time(), "- пакет пришёл с задержкой:", packet)
