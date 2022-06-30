@@ -1,6 +1,6 @@
-from storage import Storage
-from test_model import Model
-from unscented_kalman_filter import UnscentedKalmanFilter
+from .storage import Storage
+from .test_model import Model
+from .unscented_kalman_filter import UnscentedKalmanFilter
 import numpy as np
 
 
@@ -15,6 +15,9 @@ class TrackRobot:
     def enabled(self):
         # симуляция должна завершить выполнение, когда все данные закончатся
         return self._row + 1 < len(self._data)
+
+    def stop(self):
+        pass
     
     def paused(self):
         # виртуальный робот можно произвольно ставить на паузу

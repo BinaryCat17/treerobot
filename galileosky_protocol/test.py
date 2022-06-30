@@ -3,8 +3,8 @@ import socket
 import random
 import struct
 import time
-from server import GalileoServer
-from galileosky import Packet
+from .server import GalileoServer
+from .packet import make_packet
 
 HOST = 'localhost'
 PORT = 8080
@@ -35,16 +35,18 @@ def send_test_packet(s, data):
     tcp_client.close()
     return answer
 
+
 def gen_packet(time):
-    packet = Packet()
-    packet.add(1, dict(hardware=random.randrange(0, 256)))
-    packet.add(2, dict(firmware=random.randrange(0, 256)))
-    packet.add(3, dict(imei='862057047745531'))
-    packet.add(0x04, dict(terminal_id=random.randrange(0, 256)))
-    packet.add(0x20, dict(time=time))
-    data, crc16 = packet.pack()
-    data = bytearray(data)   
+    data, crc16 = make_packet([
+        (1, dict(hardware=random.randrange(0, 256))),
+        (2, dict(firmware=random.randrange(0, 256))),
+        (3, dict(imei='862057047745531')),
+        (0x04, dict(terminal_id=random.randrange(0, 256))),
+        (0x20, dict(time=time))
+    ])
+    data = bytearray(data)
     return data, crc16
+
 
 def test_load(s, n):
     current_time = time.mktime(datetime.now().timetuple())
@@ -60,7 +62,7 @@ def test_load(s, n):
     corrupted_data = bytearray(data)
     corrupted_data[10] = 0
 
-    # проверяем, что на повреждённый пакет вернётся другая сумма 
+    # проверяем, что на повреждённый пакет вернётся другая сумма
     # 5 начальных байт были переданы с предыдущей отправкой
     answer = send_test_packet(s, corrupted_data)
     if answer == crc16:
@@ -72,12 +74,14 @@ def test_load(s, n):
 
     send_test_packet(s, data)
 
-s = GalileoServer((HOST, PORT))
-t = s.serve_background()
 
-test_load(s, 5)
+def run():
+    s = GalileoServer((HOST, PORT))
+    s.serve_background()
 
-time.sleep(0.2)
-s.accept_packets()
+    test_load(s, 5)
 
-s.stop_background()
+    time.sleep(0.2)
+    s.accept_packets()
+
+    s.stop_background()

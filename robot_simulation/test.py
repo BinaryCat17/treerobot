@@ -1,6 +1,6 @@
-from test_robot import TrackRobot
-from simulation import Draw, Simulation
-from storage import Storage
+from .test_robot import TrackRobot
+from .simulation import Draw, Simulation
+from .storage import Storage
 import numpy as np
 
 DRAW_FLAGS = Draw.EstPos | Draw.ObsPos | Draw.ConfEllipse# | Draw.DeadReckoningPos
@@ -8,7 +8,7 @@ ENABLE_ANIMATION = False
 ANIMATION_INTERVAL = 50
 
 
-def main():
+def run():
     data = Storage.parsewln("BEDNAR Swifter SE 12000.wln")
     print("Стандартные отклонения датасета:")
     print("Позиция x -",
@@ -30,6 +30,3 @@ def main():
 
     print("Среднеквадратическая ошибка траектории, оценнёной аналитически, от скорректированной по датчикам:",
           "{0:0.2f}м".format(np.sqrt(np.sum((xEst - xDR) ** 2))))
-
-if __name__ == '__main__':
-    main()

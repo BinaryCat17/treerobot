@@ -1,6 +1,6 @@
-from treerobot import UnscentedKalmanFilter
-from model import Model
-from receiver import Receiver
+from robot_simulation import UnscentedKalmanFilter
+from .model import Model
+from .receiver import Receiver
 import numpy as np
 import datetime
 
@@ -15,7 +15,6 @@ class GalileoRobot:
         self._filter = UnscentedKalmanFilter(GalileoRobot.Model)
         self._updated = False
         self._receiver = Receiver()
-        self._last_updated_time = datetime.datetime.now()
 
     def enabled(self):
         return True
@@ -30,10 +29,9 @@ class GalileoRobot:
         if not self.enabled():
             return
 
-        self._updated, self._posx, self._posy, self._speed, self._angle = self._receiver.update()
+        self._updated, dt, self._posx, self._posy, self._speed, self._angle = self._receiver.update()
 
         if self._updated:
-            dt = self._last_updated_time - datetime.datetime.now()
             self._last_updated_time = datetime.datetime.now()
 
             u, x_deviation = self._controlInput()

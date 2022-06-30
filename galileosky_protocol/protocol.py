@@ -1,6 +1,6 @@
 import socketserver
 import time
-from packet import parse, packet_begin, confirm, crc16
+from .packet import parse, packet_begin, confirm, crc16
 
 class TCPRequestHandler(socketserver.BaseRequestHandler):
     # От класса можно отнаследоваться и переопределить функции:

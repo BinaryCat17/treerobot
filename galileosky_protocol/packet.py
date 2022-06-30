@@ -1,7 +1,24 @@
 import struct
 import libscrc
 from collections import OrderedDict
-from tags import tags as TAGS
+from .tags import tags as TAGS
+
+def make_packet(ltags, is_archive = True):
+    packet = struct.pack('<B', 1)
+    tags = b''
+    for tag_id, data in ltags:
+        if tag_id not in TAGS:
+            return None
+        tags += struct.pack('<B', tag_id) + TAGS[tag_id].pack(data)
+
+    mask = 0b1000000000000000 if is_archive else 0b0000000000000000
+    len_packet = len(tags) | mask
+    packet += struct.pack('<H', len_packet)
+    packet += tags
+    crc16 = libscrc.modbus(packet)
+    packet += struct.pack('<H', crc16)
+    return packet, crc16
+       
 
 # Пакет всегда начинается с трёх байт, в которых кодируется
 # заголовок, размер пакета до начала контрольной суммы и признак неотправленных данных в архиве

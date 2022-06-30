@@ -1,9 +1,9 @@
+from .protocol import TCPRequestHandler
 from datetime import datetime
 import socketserver
 import redis
 from threading import Thread
 import time
-from protocol import TCPRequestHandler
 import pickle
 
 
