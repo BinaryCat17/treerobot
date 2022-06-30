@@ -71,6 +71,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
 
         # если заголовок не совпал, то значит что-то пошло не так
         if h != 1:
+            print("INVALID HEADER")
             return None, bytearray()
 
         # записываем данные в буфер, пока не получим пакет целиком
@@ -88,8 +89,8 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             # тело текущего пакета, без учета следующего
             body = data[:-next_pack_size]
 
-        print(body)
         sended_crc16, real_crc16 = crc16(body)
+        print("CONFIRM", len(confirm(real_crc16)))
         self.request.send(confirm(real_crc16))
 
         # если получено больше данных, чем указано в пакете, то это часть следующего пакета
