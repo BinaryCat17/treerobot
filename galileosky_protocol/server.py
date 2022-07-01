@@ -13,7 +13,9 @@ class GalileoHandler(TCPRequestHandler):
         self._process_packet(packet, time.mktime(datetime.now().timetuple()), 'first')
 
     def process_main_packet(self, packet):
-        self._process_packet(packet, packet['time'], 'main')
+        #self._process_packet(packet, packet['time'], 'main')
+        self._process_packet(packet, time.mktime(datetime.now().timetuple()), 'main')
+
 
     def _process_packet(self, packet, time, type):
         data = pickle.dumps([packet, type])
