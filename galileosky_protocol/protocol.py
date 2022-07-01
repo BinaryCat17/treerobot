@@ -54,6 +54,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             return None
 
     def read_packet(self, next_packed_data):
+        self.request.settimeout(5.0)
         data = self.request.recv(1024)
     
         if not data and not next_packed_data:
@@ -75,6 +76,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
 
         # записываем данные в буфер, пока не получим пакет целиком
         while len(data) < length:
+            self.request.settimeout(1)
             buf = self.request.recv(1024)
             # если не смогли дочитать пакет, то ожидаем, что он дойдёт через время
             if not buf:

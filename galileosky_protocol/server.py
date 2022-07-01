@@ -45,8 +45,10 @@ class DefaultPacketHandler:
 
 
 class GalileoServer(socketserver.ThreadingTCPServer):
+    request_queue_size = 1000
+    allow_reuse_address = True
+
     def __init__(self, server_address, packet_handler=DefaultPacketHandler()):
-        self.allow_reuse_address = True
         self.storage = redis.Redis(host='localhost', port=6379, db=0)
         self.packet_handler = packet_handler
         self.first_packet = None
