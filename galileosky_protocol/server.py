@@ -9,13 +9,14 @@ import pickle
 
 class GalileoHandler(TCPRequestHandler):
     def process_first_packet(self, packet):
-        self.server.packet_handler.first(packet)
+        # время первичного пакета считаем, как он пришёл по факту
+        self._process_packet(packet, time.mktime(datetime.now().timetuple()), 'first')
 
     def process_main_packet(self, packet):
-        time = packet['time']
-        packet.pop('time')
+        self._process_packet(packet, packet['time'], 'main')
 
-        data = pickle.dumps(packet)
+    def _process_packet(self, packet, time, type):
+        data = pickle.dumps([packet, type])
         last_time = pickle.loads(self.server.storage.get('lastaccepted'))
 
         if time < last_time:
@@ -30,8 +31,8 @@ class GalileoHandler(TCPRequestHandler):
 
 # можно определить свой класс, подобно этому для обработки пакетов
 class DefaultPacketHandler:
-    def first(self, packet):
-        print(datetime.now().time(), "- принят первый пакет:", packet)
+    def first(self, time, packet):
+        print(time.time(), "- принят первый пакет:", packet)
 
     def delayed(self, time, packet):
         print(time.time(), "- пакет пришёл с задержкой:", packet)
@@ -46,6 +47,7 @@ class GalileoServer(socketserver.ThreadingTCPServer):
         self.allow_reuse_address = True
         self.storage = redis.Redis(host='localhost', port=6379, db=0)
         self.packet_handler = packet_handler
+        self.first_packet = None
         self._update_time(time.mktime(datetime.now().timetuple()))
 
         super().__init__(server_address, GalileoHandler)
@@ -53,9 +55,26 @@ class GalileoServer(socketserver.ThreadingTCPServer):
     def accept_packets(self):
         packets = self.storage.zrange("galileo:process", 0, -1, withscores=True)
 
+        # сначала обрабатываем первичные пакеты
         for (b, r) in packets:
+            (packet, type) = pickle.loads(b)
+            if type != 'first':
+                continue
+
+            self.storage.zrem("galileo:process", b)
+            self.packet_handler.first(datetime.fromtimestamp(int(r)), packet)
+
+        # только потом основные
+        for (b, r) in packets:
+            (packet, type) = pickle.loads(b)
+            if type != 'main':
+                continue
+
+            self.storage.zrem("galileo:process", b)
+            res = self.packet_handler.main(datetime.fromtimestamp(int(r)), packet)
+
             # в зависимости от успеха обработчика добавляем пакет в принятые или потерянные
-            if self._process_packet(b, r):
+            if res:
                 self._update_time(r)
                 self.storage.zadd('galileo:accept', {b: r})
             else:
@@ -77,10 +96,3 @@ class GalileoServer(socketserver.ThreadingTCPServer):
     
     def _update_time(self, accepted):
         self.storage.set('lastaccepted', pickle.dumps(accepted))
-
-    def _process_packet(self, b, r):
-        t = datetime.fromtimestamp(int(r))
-        # удаляем из очереди обработанные элементы
-        self.storage.zrem("galileo:process", b)
-
-        return self.packet_handler.main(t, pickle.loads(b))

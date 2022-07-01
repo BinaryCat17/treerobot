@@ -3,16 +3,11 @@ import socket
 import random
 import struct
 import time
-from .server import GalileoServer
 from .packet import make_packet
 
-HOST = 'localhost'
-PORT = 8080
-
-
-def send_test_packet(s, data):
+def send_test_packet(data, host, port):
     tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_client.connect((HOST, PORT))
+    tcp_client.connect((host, port))
 
     # разбиваем отправку данных на несколько пакетов
     offset = 0
@@ -20,9 +15,6 @@ def send_test_packet(s, data):
         tcp_client.sendall(data[offset: offset + 10])
         offset += 10
         time.sleep(0.2)
-
-        # симулируем принятие покетов в реальном времени
-        s.accept_packets()
 
     tcp_client.sendall(data[offset:])
 
@@ -36,25 +28,28 @@ def send_test_packet(s, data):
     return answer
 
 
-def gen_packet(time):
-    data, crc16 = make_packet([
-        (1, dict(hardware=random.randrange(0, 256))),
-        (2, dict(firmware=random.randrange(0, 256))),
-        (3, dict(imei='862057047745531')),
-        (0x04, dict(terminal_id=random.randrange(0, 256))),
-        (0x20, dict(time=time))
-    ])
+def gen_packet(first, time):
+    tags = []
+
+    tags.append((1, dict(hardware=random.randrange(0, 256))))
+    tags.append((2, dict(firmware=random.randrange(0, 256))))
+    if first:
+        tags.append((3, dict(imei='862057047745531'))),
+    tags.append((0x04, dict(terminal_id=random.randrange(0, 256))))
+    tags.append((0x20, dict(time=time)))
+
+    data, crc16 = make_packet(tags)
     data = bytearray(data)
     return data, crc16
 
 
-def test_load(s, n):
+def test_load(n, host, port):
     current_time = time.mktime(datetime.now().timetuple())
-    data, crc16 = gen_packet(current_time)
+    data, crc16 = gen_packet(True, current_time)
 
     # проверяем, что контрольная сумма вычисляется правильно
     # передаём 5 байт следующего пакета galileosky вместе с текущим пакетом
-    answer = send_test_packet(s, data)
+    answer = send_test_packet(data, host, port)
     if answer != crc16:
         print('Контрольная сумма не совпадает!')
 
@@ -64,24 +59,18 @@ def test_load(s, n):
 
     # проверяем, что на повреждённый пакет вернётся другая сумма
     # 5 начальных байт были переданы с предыдущей отправкой
-    answer = send_test_packet(s, corrupted_data)
+    answer = send_test_packet(corrupted_data, host, port)
     if answer == crc16:
         print('Контрольная сумма совпала для повреждённого пакета!')
 
     # отправляем сразу n пакетов сразу
     for i in range(n):
-        data += gen_packet(current_time + i)[0]
+        data += gen_packet(False, current_time + i)[0]
 
-    send_test_packet(s, data)
+    send_test_packet(data, host, port)
 
+HOST = "10.42.0.1"
+PORT = 8080
 
 def run():
-    s = GalileoServer((HOST, PORT))
-    s.serve_background()
-
-    test_load(s, 5)
-
-    time.sleep(0.2)
-    s.accept_packets()
-
-    s.stop_background()
+    test_load(5, HOST, PORT)
