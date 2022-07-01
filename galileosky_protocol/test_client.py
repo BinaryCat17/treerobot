@@ -69,8 +69,8 @@ def test_load(n, host, port):
 
     send_test_packet(data, host, port)
 
-HOST = "10.42.0.1"
-PORT = 8080
+HOST = "192.168.10.1"
+PORT = 20268
 
 def run():
     test_load(5, HOST, PORT)
